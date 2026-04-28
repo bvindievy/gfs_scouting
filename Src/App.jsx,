@@ -1,0 +1,822 @@
+import { useState, useEffect, useRef, useMemo } from "react";
+
+/* ──────────────────────────────────────────────
+   DATA LAYER – mock player database
+────────────────────────────────────────────── */
+const PLAYERS = [
+  { id:1,  name:"Kwame J. Mensah",    country:"Ghana",   flag:"🇬🇭", position:"Winger",    secondary:"Left Mid",    foot:"Left",  age:19, height:178, club:"Liberty Professionals", level:"Semi-Pro", verified:true,  prospect:true,  highPotential:false, video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=11" },
+  { id:2,  name:"Ibrahim Sulemana",   country:"Ghana",   flag:"🇬🇭", position:"Winger",    secondary:"Striker",     foot:"Right", age:18, height:175, club:"FC Nania",              level:"Semi-Pro", verified:true,  prospect:false, highPotential:true,  video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=12" },
+  { id:3,  name:"Joel A. Addo",       country:"Ghana",   flag:"🇬🇭", position:"Winger",    secondary:"Forward",     foot:"Right", age:20, height:180, club:"Medeama SC",            level:"Pro",      verified:true,  prospect:true,  highPotential:false, video:false, gps:false, img:"https://i.pravatar.cc/150?img=13" },
+  { id:4,  name:"Emmanuel Tetteh",    country:"Ghana",   flag:"🇬🇭", position:"Winger",    secondary:"AM",          foot:"Left",  age:17, height:172, club:"Right to Dream",        level:"Academy",  verified:true,  prospect:false, highPotential:true,  video:true,  gps:false, img:"https://i.pravatar.cc/150?img=14" },
+  { id:5,  name:"Samuel Owusu",       country:"Ghana",   flag:"🇬🇭", position:"Winger",    secondary:"Left Back",   foot:"Left",  age:18, height:176, club:"Ashanti Gold SC",       level:"Pro",      verified:true,  prospect:true,  highPotential:false, video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=15" },
+  { id:6,  name:"Kofi Boafo",         country:"Ghana",   flag:"🇬🇭", position:"Winger",    secondary:"Striker",     foot:"Right", age:19, height:177, club:"Kotoku Royals",         level:"Semi-Pro", verified:true,  prospect:false, highPotential:true,  video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=16" },
+  { id:7,  name:"Richmond Lamptey",   country:"Ghana",   flag:"🇬🇭", position:"Winger",    secondary:"Right Back",  foot:"Right", age:20, height:170, club:"Dreams FC",             level:"Pro",      verified:true,  prospect:true,  highPotential:false, video:true,  gps:false, img:"https://i.pravatar.cc/150?img=17" },
+  { id:8,  name:"Abdul Rahman",       country:"Ghana",   flag:"🇬🇭", position:"Winger",    secondary:"Midfielder",  foot:"Left",  age:17, height:174, club:"WAFA SC",               level:"Academy",  verified:true,  prospect:false, highPotential:true,  video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=18" },
+  { id:9,  name:"Moussa Diallo",      country:"Senegal", flag:"🇸🇳", position:"Striker",   secondary:"Winger",      foot:"Right", age:21, height:185, club:"Génération Foot",       level:"Pro",      verified:true,  prospect:true,  highPotential:false, video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=21" },
+  { id:10, name:"Amadou Koné",        country:"Ivory Coast",flag:"🇨🇮",position:"CM",      secondary:"DM",          foot:"Right", age:22, height:182, club:"ASEC Mimosas",          level:"Pro",      verified:false, prospect:true,  highPotential:false, video:false, gps:true,  img:"https://i.pravatar.cc/150?img=22" },
+  { id:11, name:"Yaw Darko",          country:"Ghana",   flag:"🇬🇭", position:"CB",        secondary:"DM",          foot:"Right", age:23, height:190, club:"Hearts of Oak",         level:"Pro",      verified:true,  prospect:false, highPotential:false, video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=23" },
+  { id:12, name:"Seydou Traoré",      country:"Mali",    flag:"🇲🇱", position:"AM",        secondary:"Winger",      foot:"Left",  age:19, height:174, club:"Djoliba AC",            level:"Semi-Pro", verified:true,  prospect:true,  highPotential:true,  video:true,  gps:false, img:"https://i.pravatar.cc/150?img=24" },
+  { id:13, name:"Kingsley Fosu",      country:"Ghana",   flag:"🇬🇭", position:"Right Back",secondary:"Winger",      foot:"Right", age:20, height:176, club:"Aduana FC",             level:"Pro",      verified:true,  prospect:false, highPotential:true,  video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=25" },
+  { id:14, name:"Oumar Ba",           country:"Senegal", flag:"🇸🇳", position:"GK",        secondary:"",            foot:"Right", age:24, height:192, club:"Jaraaf Dakar",          level:"Pro",      verified:false, prospect:false, highPotential:false, video:false, gps:false, img:"https://i.pravatar.cc/150?img=26" },
+  { id:15, name:"Issa Coulibaly",     country:"Mali",    flag:"🇲🇱", position:"Striker",   secondary:"AM",          foot:"Left",  age:18, height:181, club:"AS Real Bamako",        level:"Semi-Pro", verified:true,  prospect:true,  highPotential:true,  video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=27" },
+  { id:16, name:"Nana Asare",         country:"Ghana",   flag:"🇬🇭", position:"DM",        secondary:"CB",          foot:"Right", age:22, height:184, club:"Asante Kotoko",         level:"Pro",      verified:true,  prospect:false, highPotential:false, video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=28" },
+  { id:17, name:"Cheick Diabaté",     country:"Ivory Coast",flag:"🇨🇮",position:"Striker", secondary:"Winger",      foot:"Left",  age:17, height:179, club:"SOA Abidjan",           level:"Academy",  verified:true,  prospect:true,  highPotential:true,  video:true,  gps:false, img:"https://i.pravatar.cc/150?img=29" },
+  { id:18, name:"Ebenezer Ofori",     country:"Ghana",   flag:"🇬🇭", position:"CM",        secondary:"DM",          foot:"Right", age:25, height:177, club:"Bechem United",         level:"Pro",      verified:true,  prospect:false, highPotential:false, video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=30" },
+  { id:19, name:"Lamine Camara",      country:"Senegal", flag:"🇸🇳", position:"CM",        secondary:"AM",          foot:"Right", age:20, height:180, club:"Génération Foot",       level:"Pro",      verified:true,  prospect:true,  highPotential:true,  video:true,  gps:true,  img:"https://i.pravatar.cc/150?img=31" },
+  { id:20, name:"Moses Odjer",        country:"Ghana",   flag:"🇬🇭", position:"DM",        secondary:"CM",          foot:"Right", age:21, height:183, club:"Elmina Sharks",         level:"Pro",      verified:false, prospect:false, highPotential:true,  video:false, gps:true,  img:"https://i.pravatar.cc/150?img=32" },
+];
+
+const COUNTRIES = ["All", "Ghana", "Senegal", "Mali", "Ivory Coast", "Nigeria", "Kenya", "Morocco"];
+const POSITIONS = ["All", "GK", "CB", "Right Back", "Left Back", "DM", "CM", "AM", "Winger", "Striker"];
+const FEET      = ["All", "Left", "Right", "Both"];
+const LEVELS    = ["All Levels", "Academy", "Semi-Pro", "Pro"];
+
+/* ──────────────────────────────────────────────
+   GFS LOGO SVG (uses the brand colors)
+────────────────────────────────────────────── */
+const GFSLogo = ({ size = 40 }) => (
+  <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+    <circle cx="50" cy="50" r="48" fill="#0B2540" stroke="#1E6B5E" strokeWidth="3"/>
+    <text x="50" y="62" textAnchor="middle" fontSize="36" fontWeight="900"
+      fontFamily="serif" fill="url(#ggrad)" letterSpacing="-2">GFS</text>
+    <defs>
+      <linearGradient id="ggrad" x1="0" y1="0" x2="100" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#4ECDC4"/>
+        <stop offset="100%" stopColor="#2B8C6E"/>
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+/* ──────────────────────────────────────────────
+   BADGE COMPONENTS
+────────────────────────────────────────────── */
+const Badge = ({ label, color }) => {
+  const styles = {
+    teal:   { bg:"#0E3D35", text:"#4ECDC4", border:"#1E6B5E" },
+    amber:  { bg:"#3D2800", text:"#F5A623", border:"#7A5200" },
+    blue:   { bg:"#0D1F3C", text:"#5B9BF5", border:"#1A3D7A" },
+    green:  { bg:"#0A2D1F", text:"#52C97A", border:"#1A5A3A" },
+  };
+  const s = styles[color] || styles.teal;
+  return (
+    <span style={{
+      background: s.bg, color: s.text, border: `1px solid ${s.border}`,
+      borderRadius: 4, padding: "2px 7px", fontSize: 10, fontWeight: 700,
+      letterSpacing: "0.04em", whiteSpace: "nowrap"
+    }}>{label}</span>
+  );
+};
+
+/* ──────────────────────────────────────────────
+   PLAYER CARD
+────────────────────────────────────────────── */
+const PlayerCard = ({ player, onShortlist, onWatchlist, isShortlisted, isWatchlisted, onClick }) => {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div onClick={() => onClick(player)}
+      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      style={{
+        background: hovered ? "#132030" : "#0F1C2A",
+        border: `1px solid ${hovered ? "#1E6B5E" : "#1A2C3D"}`,
+        borderRadius: 12, overflow:"hidden", cursor:"pointer",
+        transform: hovered ? "translateY(-3px)" : "none",
+        boxShadow: hovered ? "0 12px 32px rgba(0,0,0,0.5)" : "0 2px 8px rgba(0,0,0,0.3)",
+        transition: "all 0.22s ease", position:"relative"
+      }}>
+      {/* Image area */}
+      <div style={{ position:"relative", height: 160, overflow:"hidden", background:"#0B1825" }}>
+        <img src={player.img} alt={player.name}
+          style={{ width:"100%", height:"100%", objectFit:"cover", filter:"brightness(0.85)" }}
+          onError={e => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&background=0B2540&color=4ECDC4&size=150`; }}
+        />
+        {/* Overlay badges */}
+        <div style={{ position:"absolute", top:8, left:8, display:"flex", gap:4 }}>
+          <span style={{ background:"rgba(11,37,64,0.85)", borderRadius:4, padding:"2px 6px", fontSize:11, color:"#eee" }}>
+            {player.flag} {player.country}
+          </span>
+        </div>
+        <div style={{ position:"absolute", top:8, right:8, display:"flex", gap:4 }}>
+          {player.video && <span title="Video" style={{ fontSize:14 }}>🎥</span>}
+          {player.gps && <span title="GPS" style={{ fontSize:14 }}>📡</span>}
+        </div>
+        {/* Action buttons */}
+        <div style={{ position:"absolute", bottom:8, right:8, display:"flex", gap:6 }}>
+          <button onClick={e => { e.stopPropagation(); onShortlist(player.id); }}
+            title="Shortlist" style={{
+              background: isShortlisted ? "#F5A623" : "rgba(0,0,0,0.6)",
+              border:"none", borderRadius:6, padding:"4px 8px", cursor:"pointer",
+              fontSize:14, color: isShortlisted ? "#000" : "#fff"
+            }}>⭐</button>
+          <button onClick={e => { e.stopPropagation(); onWatchlist(player.id); }}
+            title="Watchlist" style={{
+              background: isWatchlisted ? "#4ECDC4" : "rgba(0,0,0,0.6)",
+              border:"none", borderRadius:6, padding:"4px 8px", cursor:"pointer",
+              fontSize:14, color: isWatchlisted ? "#000" : "#fff"
+            }}>👁</button>
+        </div>
+      </div>
+      {/* Info area */}
+      <div style={{ padding:"12px 14px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:2 }}>
+          <span style={{ fontWeight:700, fontSize:14, color:"#E8F0F5", fontFamily:"'Playfair Display', serif" }}>
+            {player.name}
+          </span>
+          {player.verified && <span title="Verified" style={{ fontSize:12 }}>✅</span>}
+        </div>
+        <div style={{ fontSize:12, color:"#8FA8C0", marginBottom:8 }}>
+          {player.position}{player.secondary ? ` (${player.secondary})` : ""}
+        </div>
+        <div style={{ display:"flex", gap:16, marginBottom:8, fontSize:11, color:"#7A9BB5" }}>
+          <span>Age <strong style={{ color:"#B8D0E0" }}>{player.age}</strong></span>
+          <span>Ht <strong style={{ color:"#B8D0E0" }}>{player.height}cm</strong></span>
+          <span>Foot <strong style={{ color:"#B8D0E0" }}>{player.foot}</strong></span>
+        </div>
+        <div style={{ fontSize:11, color:"#5A7A90", marginBottom:10, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+          🏟 {player.club}
+        </div>
+        <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+          {player.verified    && <Badge label="Verified"      color="teal" />}
+          {player.prospect    && <Badge label="Top Prospect"  color="amber" />}
+          {player.highPotential && <Badge label="High Potential" color="green" />}
+          {player.level==="Academy" && <Badge label="Academy" color="blue" />}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────
+   PLAYER DETAIL MODAL
+────────────────────────────────────────────── */
+const PlayerModal = ({ player, onClose, onShortlist, onWatchlist, isShortlisted, isWatchlisted }) => {
+  if (!player) return null;
+  return (
+    <div onClick={onClose} style={{
+      position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:1000,
+      display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(4px)"
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background:"#0F1C2A", border:"1px solid #1E6B5E", borderRadius:16,
+        width:480, maxHeight:"85vh", overflowY:"auto", boxShadow:"0 24px 64px rgba(0,0,0,0.7)"
+      }}>
+        <div style={{ position:"relative" }}>
+          <img src={player.img} alt={player.name}
+            style={{ width:"100%", height:200, objectFit:"cover", borderRadius:"16px 16px 0 0", filter:"brightness(0.7)" }}
+            onError={e => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&background=0B2540&color=4ECDC4&size=200`; }}
+          />
+          <button onClick={onClose} style={{
+            position:"absolute", top:12, right:12, background:"rgba(0,0,0,0.6)",
+            border:"none", color:"#fff", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontSize:18
+          }}>✕</button>
+          <div style={{ position:"absolute", bottom:0, left:0, right:0, background:"linear-gradient(transparent,#0F1C2A)", height:80 }}/>
+          <div style={{ position:"absolute", bottom:16, left:20 }}>
+            <div style={{ fontSize:22, fontWeight:800, color:"#E8F0F5", fontFamily:"'Playfair Display', serif" }}>{player.flag} {player.name}</div>
+            <div style={{ fontSize:13, color:"#4ECDC4" }}>{player.position} • {player.club}</div>
+          </div>
+        </div>
+        <div style={{ padding:20 }}>
+          {/* Stats grid */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:20 }}>
+            {[["Age", player.age], ["Height", `${player.height}cm`], ["Foot", player.foot],
+              ["Country", player.country], ["Level", player.level], ["Position", player.position]
+            ].map(([k,v]) => (
+              <div key={k} style={{ background:"#0B1825", borderRadius:8, padding:"10px 12px", border:"1px solid #1A2C3D" }}>
+                <div style={{ fontSize:10, color:"#5A7A90", marginBottom:2, textTransform:"uppercase", letterSpacing:"0.06em" }}>{k}</div>
+                <div style={{ fontSize:13, fontWeight:700, color:"#B8D0E0" }}>{v}</div>
+              </div>
+            ))}
+          </div>
+          {/* Data availability */}
+          <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
+            {player.video && <Badge label="🎥 Video Available" color="blue"/>}
+            {player.gps   && <Badge label="📡 GPS Data"        color="teal"/>}
+            {player.verified && <Badge label="✅ Verified"     color="green"/>}
+            {player.prospect && <Badge label="⭐ Top Prospect"  color="amber"/>}
+            {player.highPotential && <Badge label="🔥 High Potential" color="green"/>}
+          </div>
+          {/* Scout notes placeholder */}
+          <div style={{ background:"#0B1825", borderRadius:8, padding:14, border:"1px solid #1A2C3D", marginBottom:16 }}>
+            <div style={{ fontSize:11, color:"#5A7A90", marginBottom:6, textTransform:"uppercase", letterSpacing:"0.06em" }}>Scout Notes</div>
+            <textarea placeholder="Add your scouting notes here..." style={{
+              width:"100%", background:"transparent", border:"none", color:"#8FA8C0",
+              fontSize:13, resize:"none", outline:"none", fontFamily:"inherit", minHeight:60
+            }}/>
+          </div>
+          {/* Actions */}
+          <div style={{ display:"flex", gap:10 }}>
+            <button onClick={() => onShortlist(player.id)} style={{
+              flex:1, background: isShortlisted ? "#F5A623" : "#1A2C3D",
+              border:"none", borderRadius:8, padding:"10px 0", color: isShortlisted ? "#000" : "#B8D0E0",
+              fontWeight:700, cursor:"pointer", fontSize:13, transition:"all 0.2s"
+            }}>⭐ {isShortlisted ? "Shortlisted" : "Add to Shortlist"}</button>
+            <button onClick={() => onWatchlist(player.id)} style={{
+              flex:1, background: isWatchlisted ? "#4ECDC4" : "#1A2C3D",
+              border:"none", borderRadius:8, padding:"10px 0", color: isWatchlisted ? "#000" : "#B8D0E0",
+              fontWeight:700, cursor:"pointer", fontSize:13, transition:"all 0.2s"
+            }}>👁 {isWatchlisted ? "Watching" : "Add to Watchlist"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────
+   AI CHAT ASSISTANT
+────────────────────────────────────────────── */
+const AskGFS = ({ players, onClose }) => {
+  const [messages, setMessages] = useState([
+    { role:"assistant", content:"Hi! I'm your GFS AI Scout. Ask me to find players, compare stats, or get scouting insights." }
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef(null);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:"smooth" }); }, [messages]);
+
+  const playerContext = players.map(p =>
+    `${p.name}: ${p.country}, ${p.position}, Age ${p.age}, Height ${p.height}cm, Foot: ${p.foot}, Club: ${p.club}, Level: ${p.level}, Verified: ${p.verified}, TopProspect: ${p.prospect}, HighPotential: ${p.highPotential}, Video: ${p.video}`
+  ).join("\n");
+
+  const send = async () => {
+    if (!input.trim() || loading) return;
+    const userMsg = { role:"user", content: input.trim() };
+    const newMsgs = [...messages, userMsg];
+    setMessages(newMsgs);
+    setInput("");
+    setLoading(true);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          model:"claude-sonnet-4-20250514", max_tokens:800,
+          system:`You are an expert football scout AI assistant for Global Footprint Sports Management (GFS). You help scouts discover and analyse talent across Africa and beyond. Here is the current player database:\n\n${playerContext}\n\nAnswer concisely and professionally. Use emojis sparingly. When suggesting players, list their key attributes.`,
+          messages: newMsgs
+        })
+      });
+      const data = await res.json();
+      const reply = data.content?.map(b => b.text||"").join("") || "Sorry, I couldn't process that.";
+      setMessages(m => [...m, { role:"assistant", content:reply }]);
+    } catch {
+      setMessages(m => [...m, { role:"assistant", content:"Network error. Please try again." }]);
+    }
+    setLoading(false);
+  };
+
+  const suggestions = [
+    "Show me top U20 wingers in Ghana",
+    "Compare left-footed strikers",
+    "Find verified players with video",
+    "Who are the highest potential Academy players?"
+  ];
+
+  return (
+    <div style={{
+      position:"fixed", bottom:24, right:24, width:380, height:520,
+      background:"#0F1C2A", border:"1px solid #1E6B5E", borderRadius:16,
+      boxShadow:"0 20px 60px rgba(0,0,0,0.7)", display:"flex", flexDirection:"column", zIndex:900
+    }}>
+      {/* Header */}
+      <div style={{
+        padding:"14px 16px", borderBottom:"1px solid #1A2C3D",
+        display:"flex", alignItems:"center", gap:10, justifyContent:"space-between"
+      }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ width:36, height:36, borderRadius:10, background:"linear-gradient(135deg,#1E6B5E,#4ECDC4)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🤖</div>
+          <div>
+            <div style={{ fontWeight:700, color:"#E8F0F5", fontSize:14 }}>Ask GFS AI</div>
+            <div style={{ fontSize:11, color:"#4ECDC4" }}>● Online</div>
+          </div>
+        </div>
+        <button onClick={onClose} style={{ background:"none", border:"none", color:"#5A7A90", cursor:"pointer", fontSize:18 }}>✕</button>
+      </div>
+      {/* Messages */}
+      <div style={{ flex:1, overflowY:"auto", padding:14, display:"flex", flexDirection:"column", gap:10 }}>
+        {messages.map((m,i) => (
+          <div key={i} style={{
+            alignSelf: m.role==="user" ? "flex-end" : "flex-start",
+            maxWidth:"85%",
+            background: m.role==="user" ? "linear-gradient(135deg,#1E6B5E,#2B8C6E)" : "#132030",
+            border: m.role==="assistant" ? "1px solid #1A2C3D" : "none",
+            borderRadius: m.role==="user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+            padding:"10px 13px", fontSize:13, color:"#D0E4F0", lineHeight:1.5
+          }}>{m.content}</div>
+        ))}
+        {loading && (
+          <div style={{ alignSelf:"flex-start", background:"#132030", border:"1px solid #1A2C3D", borderRadius:"12px 12px 12px 2px", padding:"10px 13px" }}>
+            <span style={{ color:"#4ECDC4" }}>●</span>
+            <span style={{ color:"#8FA8C0", fontSize:13 }}> Analysing...</span>
+          </div>
+        )}
+        <div ref={bottomRef}/>
+      </div>
+      {/* Suggestions */}
+      {messages.length <= 1 && (
+        <div style={{ padding:"0 14px 8px", display:"flex", flexDirection:"column", gap:5 }}>
+          {suggestions.map(s => (
+            <button key={s} onClick={() => setInput(s)} style={{
+              background:"#132030", border:"1px solid #1A2C3D", borderRadius:8,
+              padding:"7px 11px", color:"#7A9BB5", fontSize:12, cursor:"pointer",
+              textAlign:"left", transition:"all 0.15s"
+            }}>{s}</button>
+          ))}
+        </div>
+      )}
+      {/* Input */}
+      <div style={{ padding:"10px 14px", borderTop:"1px solid #1A2C3D", display:"flex", gap:8 }}>
+        <input value={input} onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key==="Enter" && send()}
+          placeholder="Ask about players..." style={{
+            flex:1, background:"#132030", border:"1px solid #1A2C3D", borderRadius:8,
+            padding:"9px 12px", color:"#E8F0F5", fontSize:13, outline:"none", fontFamily:"inherit"
+          }}/>
+        <button onClick={send} disabled={loading} style={{
+          background:"linear-gradient(135deg,#1E6B5E,#4ECDC4)", border:"none", borderRadius:8,
+          padding:"9px 14px", color:"#fff", fontWeight:700, cursor:"pointer", fontSize:14
+        }}>➤</button>
+      </div>
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────
+   DASHBOARD VIEW
+────────────────────────────────────────────── */
+const Dashboard = ({ players, shortlist, watchlist }) => {
+  const stats = [
+    { label:"Total Players",  value: players.length,                      icon:"👥", color:"#4ECDC4" },
+    { label:"Shortlisted",    value: shortlist.length,                     icon:"⭐", color:"#F5A623" },
+    { label:"Watchlist",      value: watchlist.length,                     icon:"👁",  color:"#5B9BF5" },
+    { label:"Verified",       value: players.filter(p=>p.verified).length, icon:"✅", color:"#52C97A" },
+    { label:"Top Prospects",  value: players.filter(p=>p.prospect).length, icon:"🔥", color:"#FF6B6B" },
+    { label:"With Video",     value: players.filter(p=>p.video).length,    icon:"🎥", color:"#C77DFF" },
+  ];
+  const byCountry = COUNTRIES.slice(1).map(c => ({ country:c, count: players.filter(p=>p.country===c).length })).filter(x=>x.count>0);
+  const byPosition = POSITIONS.slice(1).map(pos => ({ pos, count: players.filter(p=>p.position===pos).length })).filter(x=>x.count>0);
+
+  return (
+    <div>
+      <h2 style={{ fontSize:24, fontWeight:800, color:"#E8F0F5", fontFamily:"'Playfair Display', serif", marginBottom:4 }}>Dashboard</h2>
+      <p style={{ color:"#5A7A90", marginBottom:24, fontSize:14 }}>Your scouting overview at a glance</p>
+      {/* Stats */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14, marginBottom:28 }}>
+        {stats.map(s => (
+          <div key={s.label} style={{ background:"#0F1C2A", border:"1px solid #1A2C3D", borderRadius:12, padding:"16px 18px" }}>
+            <div style={{ fontSize:24, marginBottom:6 }}>{s.icon}</div>
+            <div style={{ fontSize:28, fontWeight:800, color: s.color, fontFamily:"'Playfair Display', serif" }}>{s.value}</div>
+            <div style={{ fontSize:12, color:"#5A7A90", marginTop:2 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+      {/* Charts */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+        <div style={{ background:"#0F1C2A", border:"1px solid #1A2C3D", borderRadius:12, padding:16 }}>
+          <div style={{ fontSize:13, fontWeight:700, color:"#B8D0E0", marginBottom:14 }}>Players by Country</div>
+          {byCountry.map(({country,count}) => (
+            <div key={country} style={{ marginBottom:8 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, color:"#7A9BB5", marginBottom:4 }}>
+                <span>{country}</span><span style={{ color:"#4ECDC4" }}>{count}</span>
+              </div>
+              <div style={{ background:"#132030", borderRadius:4, height:6, overflow:"hidden" }}>
+                <div style={{ width:`${(count/players.length)*100}%`, height:"100%", background:"linear-gradient(90deg,#1E6B5E,#4ECDC4)", borderRadius:4 }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ background:"#0F1C2A", border:"1px solid #1A2C3D", borderRadius:12, padding:16 }}>
+          <div style={{ fontSize:13, fontWeight:700, color:"#B8D0E0", marginBottom:14 }}>Players by Position</div>
+          {byPosition.map(({pos,count}) => (
+            <div key={pos} style={{ marginBottom:8 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, color:"#7A9BB5", marginBottom:4 }}>
+                <span>{pos}</span><span style={{ color:"#F5A623" }}>{count}</span>
+              </div>
+              <div style={{ background:"#132030", borderRadius:4, height:6, overflow:"hidden" }}>
+                <div style={{ width:`${(count/players.length)*100}%`, height:"100%", background:"linear-gradient(90deg,#7A5200,#F5A623)", borderRadius:4 }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────
+   SCOUTING NOTES VIEW
+────────────────────────────────────────────── */
+const ScoutingNotes = () => {
+  const [notes, setNotes] = useState([
+    { id:1, title:"U20 Wingers – Ghana", date:"2026-04-20", content:"Kwame Mensah shows exceptional pace on the left flank. First touch needs polish but the raw ability is undeniable. Recommend a second look in May.", tags:["Ghana","Winger","U20"] },
+    { id:2, title:"Senegal Trip – April",date:"2026-04-15", content:"Visited Génération Foot. Moussa Diallo is ready for a European move. Strong aerial game and link-up play. Agent contacted.", tags:["Senegal","Striker","Ready"] },
+  ]);
+  const [drafting, setDrafting] = useState(false);
+  const [draft, setDraft] = useState({ title:"", content:"", tags:"" });
+
+  const save = () => {
+    if (!draft.title.trim()) return;
+    setNotes(n => [...n, { id: Date.now(), title:draft.title, date:new Date().toISOString().slice(0,10), content:draft.content, tags: draft.tags.split(",").map(t=>t.trim()).filter(Boolean) }]);
+    setDraft({ title:"", content:"", tags:"" });
+    setDrafting(false);
+  };
+
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+        <div>
+          <h2 style={{ fontSize:24, fontWeight:800, color:"#E8F0F5", fontFamily:"'Playfair Display', serif", marginBottom:4 }}>Scouting Notes</h2>
+          <p style={{ color:"#5A7A90", fontSize:14 }}>Your private observations and reports</p>
+        </div>
+        <button onClick={() => setDrafting(true)} style={{
+          background:"linear-gradient(135deg,#1E6B5E,#4ECDC4)", border:"none", borderRadius:10,
+          padding:"10px 18px", color:"#fff", fontWeight:700, cursor:"pointer", fontSize:13
+        }}>+ New Note</button>
+      </div>
+      {drafting && (
+        <div style={{ background:"#0F1C2A", border:"1px solid #1E6B5E", borderRadius:12, padding:18, marginBottom:20 }}>
+          <input value={draft.title} onChange={e=>setDraft(d=>({...d,title:e.target.value}))} placeholder="Note title..."
+            style={{ width:"100%", background:"#132030", border:"1px solid #1A2C3D", borderRadius:8, padding:"9px 12px", color:"#E8F0F5", fontSize:14, marginBottom:10, outline:"none", fontFamily:"inherit", boxSizing:"border-box" }}/>
+          <textarea value={draft.content} onChange={e=>setDraft(d=>({...d,content:e.target.value}))} placeholder="Write your scouting observations..."
+            style={{ width:"100%", background:"#132030", border:"1px solid #1A2C3D", borderRadius:8, padding:"9px 12px", color:"#E8F0F5", fontSize:13, minHeight:100, outline:"none", resize:"vertical", fontFamily:"inherit", marginBottom:10, boxSizing:"border-box" }}/>
+          <input value={draft.tags} onChange={e=>setDraft(d=>({...d,tags:e.target.value}))} placeholder="Tags (comma separated): Ghana, Winger..."
+            style={{ width:"100%", background:"#132030", border:"1px solid #1A2C3D", borderRadius:8, padding:"9px 12px", color:"#E8F0F5", fontSize:13, marginBottom:12, outline:"none", fontFamily:"inherit", boxSizing:"border-box" }}/>
+          <div style={{ display:"flex", gap:8 }}>
+            <button onClick={save} style={{ background:"linear-gradient(135deg,#1E6B5E,#4ECDC4)", border:"none", borderRadius:8, padding:"9px 18px", color:"#fff", fontWeight:700, cursor:"pointer" }}>Save Note</button>
+            <button onClick={()=>setDrafting(false)} style={{ background:"#132030", border:"1px solid #1A2C3D", borderRadius:8, padding:"9px 18px", color:"#7A9BB5", cursor:"pointer" }}>Cancel</button>
+          </div>
+        </div>
+      )}
+      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        {notes.map(n => (
+          <div key={n.id} style={{ background:"#0F1C2A", border:"1px solid #1A2C3D", borderRadius:12, padding:18 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+              <div style={{ fontWeight:700, fontSize:15, color:"#E8F0F5" }}>{n.title}</div>
+              <div style={{ fontSize:12, color:"#5A7A90" }}>{n.date}</div>
+            </div>
+            <p style={{ fontSize:13, color:"#8FA8C0", lineHeight:1.6, marginBottom:10 }}>{n.content}</p>
+            <div style={{ display:"flex", gap:6 }}>
+              {n.tags.map(t => <Badge key={t} label={t} color="teal"/>)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────
+   REPORTS VIEW
+────────────────────────────────────────────── */
+const Reports = ({ players, shortlist, watchlist }) => {
+  const recentActivity = [
+    { action:"Added to shortlist", player:"Kwame J. Mensah", time:"2h ago", icon:"⭐" },
+    { action:"Scouting note added", player:"Ibrahim Sulemana", time:"5h ago", icon:"📝" },
+    { action:"Added to watchlist", player:"Moussa Diallo", time:"1d ago", icon:"👁" },
+    { action:"Report generated", player:"Joel A. Addo", time:"2d ago", icon:"📊" },
+    { action:"Video reviewed", player:"Lamine Camara", time:"3d ago", icon:"🎥" },
+  ];
+  return (
+    <div>
+      <h2 style={{ fontSize:24, fontWeight:800, color:"#E8F0F5", fontFamily:"'Playfair Display', serif", marginBottom:4 }}>Reports</h2>
+      <p style={{ color:"#5A7A90", fontSize:14, marginBottom:24 }}>Activity logs and generated reports</p>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:24 }}>
+        {[
+          { label:"Reports Generated", value:12, icon:"📊", color:"#4ECDC4" },
+          { label:"Players Scouted",   value:players.length, icon:"👤", color:"#F5A623" },
+          { label:"Countries Covered", value:[...new Set(players.map(p=>p.country))].length, icon:"🌍", color:"#5B9BF5" },
+          { label:"Videos Reviewed",  value:players.filter(p=>p.video).length, icon:"🎥", color:"#52C97A" },
+        ].map(s => (
+          <div key={s.label} style={{ background:"#0F1C2A", border:"1px solid #1A2C3D", borderRadius:12, padding:16, display:"flex", gap:14, alignItems:"center" }}>
+            <div style={{ fontSize:28 }}>{s.icon}</div>
+            <div>
+              <div style={{ fontSize:26, fontWeight:800, color:s.color, fontFamily:"'Playfair Display', serif" }}>{s.value}</div>
+              <div style={{ fontSize:12, color:"#5A7A90" }}>{s.label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background:"#0F1C2A", border:"1px solid #1A2C3D", borderRadius:12, padding:18 }}>
+        <div style={{ fontSize:13, fontWeight:700, color:"#B8D0E0", marginBottom:14 }}>Recent Activity</div>
+        {recentActivity.map((a,i) => (
+          <div key={i} style={{ display:"flex", gap:12, alignItems:"center", padding:"10px 0", borderBottom: i<recentActivity.length-1 ? "1px solid #1A2C3D" : "none" }}>
+            <div style={{ fontSize:20, width:32, textAlign:"center" }}>{a.icon}</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, color:"#B8D0E0" }}>{a.action}</div>
+              <div style={{ fontSize:12, color:"#5A7A90" }}>{a.player}</div>
+            </div>
+            <div style={{ fontSize:11, color:"#3A5A70" }}>{a.time}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ──────────────────────────────────────────────
+   MAIN APP
+────────────────────────────────────────────── */
+export default function App() {
+  const [view, setView]         = useState("search");
+  const [shortlist, setShortlist] = useState([]);
+  const [watchlist, setWatchlist] = useState([]);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [showAI, setShowAI]     = useState(false);
+  const [sidebarOpen]           = useState(true);
+
+  // Search / Filter state
+  const [search,   setSearch]   = useState("");
+  const [country,  setCountry]  = useState("All");
+  const [position, setPosition] = useState("All");
+  const [foot,     setFoot]     = useState("All");
+  const [level,    setLevel]    = useState("All Levels");
+  const [ageMin,   setAgeMin]   = useState(16);
+  const [ageMax,   setAgeMax]   = useState(35);
+  const [htMin,    setHtMin]    = useState(160);
+  const [htMax,    setHtMax]    = useState(200);
+  const [onlyVideo,    setOnlyVideo]    = useState(false);
+  const [onlyGPS,      setOnlyGPS]      = useState(false);
+  const [onlyVerified, setOnlyVerified] = useState(false);
+  const [onlyProspect, setOnlyProspect] = useState(false);
+  const [sortBy, setSortBy] = useState("Relevance");
+
+  const toggleShortlist = id => setShortlist(s => s.includes(id) ? s.filter(x=>x!==id) : [...s, id]);
+  const toggleWatchlist  = id => setWatchlist(s => s.includes(id) ? s.filter(x=>x!==id) : [...s, id]);
+
+  const filteredPlayers = useMemo(() => {
+    let p = PLAYERS.filter(pl =>
+      (search===""            || pl.name.toLowerCase().includes(search.toLowerCase()) || pl.club.toLowerCase().includes(search.toLowerCase())) &&
+      (country==="All"        || pl.country===country) &&
+      (position==="All"       || pl.position===position) &&
+      (foot==="All"           || pl.foot===foot) &&
+      (level==="All Levels"   || pl.level===level) &&
+      pl.age    >= ageMin && pl.age    <= ageMax &&
+      pl.height >= htMin  && pl.height <= htMax  &&
+      (!onlyVideo    || pl.video) &&
+      (!onlyGPS      || pl.gps) &&
+      (!onlyVerified || pl.verified) &&
+      (!onlyProspect || pl.prospect)
+    );
+    if (sortBy==="Name")       p = [...p].sort((a,b)=>a.name.localeCompare(b.name));
+    if (sortBy==="Age")        p = [...p].sort((a,b)=>a.age-b.age);
+    if (sortBy==="Height")     p = [...p].sort((a,b)=>b.height-a.height);
+    return p;
+  }, [search, country, position, foot, level, ageMin, ageMax, htMin, htMax, onlyVideo, onlyGPS, onlyVerified, onlyProspect, sortBy]);
+
+  const navItems = [
+    { id:"search",    icon:"🔍", label:"Search Players" },
+    { id:"dashboard", icon:"📊", label:"Dashboard" },
+    { id:"shortlist", icon:"⭐", label:"Shortlist",  badge: shortlist.length },
+    { id:"watchlist", icon:"👁",  label:"Watchlist",  badge: watchlist.length },
+    { id:"reports",   icon:"📋", label:"Reports" },
+    { id:"notes",     icon:"📝", label:"Scouting Notes" },
+  ];
+
+  const playersForList = (ids) => PLAYERS.filter(p => ids.includes(p.id));
+
+  const inp = (val, setter, min, max) => (
+    <input type="range" min={min} max={max} value={val} onChange={e=>setter(+e.target.value)}
+      style={{ width:"100%", accentColor:"#4ECDC4", cursor:"pointer" }}/>
+  );
+
+  const sel = (val, setter, opts) => (
+    <select value={val} onChange={e=>setter(e.target.value)} style={{
+      width:"100%", background:"#132030", border:"1px solid #1A2C3D", borderRadius:8,
+      padding:"8px 10px", color:"#B8D0E0", fontSize:12, outline:"none", cursor:"pointer"
+    }}>
+      {opts.map(o => <option key={o} value={o}>{o}</option>)}
+    </select>
+  );
+
+  const labelStyle = { fontSize:11, color:"#5A7A90", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:6, display:"block" };
+  const sectionStyle = { marginBottom:16 };
+
+  return (
+    <div style={{
+      display:"flex", height:"100vh", background:"#091420",
+      fontFamily:"'Outfit', 'Nunito', sans-serif", color:"#E8F0F5",
+      overflow:"hidden"
+    }}>
+      {/* ── SIDEBAR ── */}
+      <div style={{
+        width: 220, background:"#0B1825", borderRight:"1px solid #1A2C3D",
+        display:"flex", flexDirection:"column", flexShrink:0
+      }}>
+        {/* Brand */}
+        <div style={{ padding:"20px 16px", borderBottom:"1px solid #1A2C3D", display:"flex", alignItems:"center", gap:10 }}>
+          <GFSLogo size={42}/>
+          <div>
+            <div style={{ fontWeight:800, fontSize:13, color:"#E8F0F5", lineHeight:1.2 }}>Global Footprint</div>
+            <div style={{ fontSize:10, color:"#4ECDC4", letterSpacing:"0.06em" }}>SPORTS MANAGEMENT</div>
+          </div>
+        </div>
+        {/* Scout info */}
+        <div style={{ padding:"14px 16px", borderBottom:"1px solid #1A2C3D" }}>
+          <div style={{ fontSize:10, color:"#5A7A90", marginBottom:2 }}>Welcome,</div>
+          <div style={{ fontSize:13, fontWeight:700, color:"#B8D0E0" }}>Head Scout</div>
+          <div style={{ display:"inline-block", background:"#0E3D35", color:"#4ECDC4", fontSize:10, borderRadius:4, padding:"1px 7px", marginTop:3 }}>● Active</div>
+        </div>
+        {/* Nav */}
+        <nav style={{ flex:1, padding:"8px 8px", overflowY:"auto" }}>
+          {navItems.map(n => (
+            <button key={n.id} onClick={() => setView(n.id)} style={{
+              width:"100%", display:"flex", alignItems:"center", gap:10, padding:"10px 12px",
+              background: view===n.id ? "linear-gradient(90deg,#0E3D35,#132030)" : "transparent",
+              border: view===n.id ? "1px solid #1E6B5E" : "1px solid transparent",
+              borderRadius:10, color: view===n.id ? "#4ECDC4" : "#5A7A90",
+              cursor:"pointer", fontSize:13, textAlign:"left", marginBottom:2,
+              transition:"all 0.18s"
+            }}>
+              <span>{n.icon}</span>
+              <span style={{ flex:1 }}>{n.label}</span>
+              {n.badge > 0 && (
+                <span style={{ background:"#1E6B5E", color:"#4ECDC4", borderRadius:10, padding:"1px 7px", fontSize:11, fontWeight:700 }}>{n.badge}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+        {/* AI Button */}
+        <div style={{ padding:12, borderTop:"1px solid #1A2C3D" }}>
+          <button onClick={() => setShowAI(!showAI)} style={{
+            width:"100%", background: showAI ? "linear-gradient(135deg,#1E6B5E,#4ECDC4)" : "#132030",
+            border:"1px solid #1E6B5E", borderRadius:10, padding:"10px 0",
+            color: showAI ? "#fff" : "#4ECDC4", fontWeight:700, cursor:"pointer", fontSize:13,
+            display:"flex", alignItems:"center", justifyContent:"center", gap:8
+          }}>🤖 Ask GFS AI</button>
+        </div>
+        <div style={{ padding:"10px 16px", borderTop:"1px solid #1A2C3D" }}>
+          <button style={{ background:"none", border:"none", color:"#3A5A70", cursor:"pointer", fontSize:12 }}>⚙ Settings</button>
+        </div>
+      </div>
+
+      {/* ── MAIN ── */}
+      <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
+        {/* Content area */}
+        <div style={{ flex:1, overflowY:"auto", padding:28 }}>
+          {/* Header */}
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:24 }}>
+            <div style={{ flex:1, position:"relative" }}>
+              <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"#3A5A70", fontSize:16 }}>🔍</span>
+              <input value={search} onChange={e=>setSearch(e.target.value)}
+                placeholder="Search players by name or club..."
+                style={{
+                  width:"100%", background:"#0F1C2A", border:"1px solid #1A2C3D",
+                  borderRadius:10, padding:"11px 14px 11px 38px", color:"#E8F0F5",
+                  fontSize:14, outline:"none", fontFamily:"inherit", boxSizing:"border-box"
+                }}/>
+            </div>
+            <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{
+              background:"#0F1C2A", border:"1px solid #1A2C3D", borderRadius:10, padding:"11px 14px",
+              color:"#B8D0E0", fontSize:13, outline:"none", cursor:"pointer"
+            }}>
+              {["Relevance","Name","Age","Height"].map(o=><option key={o}>{o}</option>)}
+            </select>
+          </div>
+
+          {view === "search" && (
+            <>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
+                <div>
+                  <h2 style={{ fontSize:22, fontWeight:800, color:"#E8F0F5", fontFamily:"'Playfair Display', serif", marginBottom:2 }}>Search Players</h2>
+                  <p style={{ color:"#5A7A90", fontSize:13 }}>{filteredPlayers.length} players found</p>
+                </div>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:16 }}>
+                {filteredPlayers.map(p => (
+                  <PlayerCard key={p.id} player={p}
+                    isShortlisted={shortlist.includes(p.id)} isWatchlisted={watchlist.includes(p.id)}
+                    onShortlist={toggleShortlist} onWatchlist={toggleWatchlist}
+                    onClick={setSelectedPlayer}/>
+                ))}
+                {filteredPlayers.length===0 && (
+                  <div style={{ gridColumn:"1/-1", textAlign:"center", color:"#3A5A70", padding:60, fontSize:14 }}>
+                    No players match your filters. Try adjusting the criteria.
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {view === "dashboard" && (
+            <Dashboard players={PLAYERS} shortlist={shortlist} watchlist={watchlist}/>
+          )}
+
+          {view === "shortlist" && (
+            <>
+              <h2 style={{ fontSize:22, fontWeight:800, color:"#E8F0F5", fontFamily:"'Playfair Display', serif", marginBottom:4 }}>Shortlist</h2>
+              <p style={{ color:"#5A7A90", fontSize:13, marginBottom:20 }}>{shortlist.length} players shortlisted</p>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:16 }}>
+                {playersForList(shortlist).map(p => (
+                  <PlayerCard key={p.id} player={p}
+                    isShortlisted={true} isWatchlisted={watchlist.includes(p.id)}
+                    onShortlist={toggleShortlist} onWatchlist={toggleWatchlist}
+                    onClick={setSelectedPlayer}/>
+                ))}
+                {shortlist.length===0 && <div style={{ gridColumn:"1/-1", textAlign:"center", color:"#3A5A70", padding:60 }}>No players shortlisted yet. Star players to add them here.</div>}
+              </div>
+            </>
+          )}
+
+          {view === "watchlist" && (
+            <>
+              <h2 style={{ fontSize:22, fontWeight:800, color:"#E8F0F5", fontFamily:"'Playfair Display', serif", marginBottom:4 }}>Watchlist</h2>
+              <p style={{ color:"#5A7A90", fontSize:13, marginBottom:20 }}>{watchlist.length} players being watched</p>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:16 }}>
+                {playersForList(watchlist).map(p => (
+                  <PlayerCard key={p.id} player={p}
+                    isShortlisted={shortlist.includes(p.id)} isWatchlisted={true}
+                    onShortlist={toggleShortlist} onWatchlist={toggleWatchlist}
+                    onClick={setSelectedPlayer}/>
+                ))}
+                {watchlist.length===0 && <div style={{ gridColumn:"1/-1", textAlign:"center", color:"#3A5A70", padding:60 }}>No players on watchlist yet. Click the eye icon to watch players.</div>}
+              </div>
+            </>
+          )}
+
+          {view === "reports" && <Reports players={PLAYERS} shortlist={shortlist} watchlist={watchlist}/>}
+          {view === "notes"   && <ScoutingNotes/>}
+        </div>
+
+        {/* ── RIGHT FILTER PANEL (search only) ── */}
+        {view==="search" && (
+          <div style={{
+            width:220, background:"#0B1825", borderLeft:"1px solid #1A2C3D",
+            padding:16, overflowY:"auto", flexShrink:0
+          }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+              <span style={{ fontWeight:700, fontSize:14, color:"#B8D0E0" }}>Filters</span>
+              <button onClick={() => { setCountry("All"); setPosition("All"); setFoot("All"); setLevel("All Levels"); setAgeMin(16); setAgeMax(35); setHtMin(160); setHtMax(200); setOnlyVideo(false); setOnlyGPS(false); setOnlyVerified(false); setOnlyProspect(false); }}
+                style={{ background:"none", border:"none", color:"#4ECDC4", cursor:"pointer", fontSize:12 }}>Reset</button>
+            </div>
+
+            <div style={sectionStyle}>
+              <label style={labelStyle}>Country</label>
+              {sel(country, setCountry, COUNTRIES)}
+            </div>
+            <div style={sectionStyle}>
+              <label style={labelStyle}>Age Range: {ageMin} – {ageMax}</label>
+              {inp(ageMin, setAgeMin, 14, ageMax)} {inp(ageMax, setAgeMax, ageMin, 40)}
+            </div>
+            <div style={sectionStyle}>
+              <label style={labelStyle}>Position</label>
+              {sel(position, setPosition, POSITIONS)}
+            </div>
+            <div style={sectionStyle}>
+              <label style={labelStyle}>Preferred Foot</label>
+              {sel(foot, setFoot, FEET)}
+            </div>
+            <div style={sectionStyle}>
+              <label style={labelStyle}>Height: {htMin} – {htMax}cm</label>
+              {inp(htMin, setHtMin, 155, htMax)} {inp(htMax, setHtMax, htMin, 210)}
+            </div>
+            <div style={sectionStyle}>
+              <label style={labelStyle}>Level</label>
+              {sel(level, setLevel, LEVELS)}
+            </div>
+            <div style={{ borderTop:"1px solid #1A2C3D", paddingTop:14, marginBottom:14 }}>
+              {[
+                [onlyVideo,    setOnlyVideo,    "🎥 Video Available"],
+                [onlyGPS,      setOnlyGPS,      "📡 GPS Data"],
+                [onlyVerified, setOnlyVerified, "✅ Verified"],
+                [onlyProspect, setOnlyProspect, "⭐ Top Prospect"],
+              ].map(([val,setter,label]) => (
+                <label key={label} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10, cursor:"pointer", fontSize:12, color:"#7A9BB5" }}>
+                  <input type="checkbox" checked={val} onChange={e=>setter(e.target.checked)}
+                    style={{ accentColor:"#4ECDC4", width:14, height:14 }}/>
+                  {label}
+                </label>
+              ))}
+            </div>
+            <button style={{
+              width:"100%", background:"linear-gradient(135deg,#1E6B5E,#4ECDC4)",
+              border:"none", borderRadius:10, padding:"11px 0", color:"#fff",
+              fontWeight:700, cursor:"pointer", fontSize:13, marginBottom:8
+            }}>Apply Filters ({filteredPlayers.length})</button>
+          </div>
+        )}
+      </div>
+
+      {/* ── MODALS ── */}
+      {selectedPlayer && (
+        <PlayerModal player={selectedPlayer} onClose={() => setSelectedPlayer(null)}
+          isShortlisted={shortlist.includes(selectedPlayer.id)}
+          isWatchlisted={watchlist.includes(selectedPlayer.id)}
+          onShortlist={id => { toggleShortlist(id); }}
+          onWatchlist={id => { toggleWatchlist(id); }}/>
+      )}
+      {showAI && <AskGFS players={PLAYERS} onClose={() => setShowAI(false)}/>}
+
+      {/* Google Fonts */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #091420; }
+        ::-webkit-scrollbar-thumb { background: #1A2C3D; border-radius: 4px; }
+        input[type=range] { -webkit-appearance: none; height: 4px; border-radius: 4px; background: #1A2C3D; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: #4ECDC4; border-radius: 50%; cursor: pointer; }
+        select option { background: #132030; color: #B8D0E0; }
+      `}</style>
+    </div>
+  );
+}
